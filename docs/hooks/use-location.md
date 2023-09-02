@@ -11,7 +11,7 @@ title: useLocation
 declare function useLocation(): Location;
 
 interface Location extends Path {
-  state: unknown;
+  state: any;
   key: Key;
 }
 ```
@@ -28,6 +28,7 @@ function App() {
   let location = useLocation();
 
   React.useEffect(() => {
+    // Google Analytics
     ga('send', 'pageview');
   }, [location]);
 

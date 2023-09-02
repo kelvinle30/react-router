@@ -25,7 +25,7 @@
  * - TSC needs to generate the types, and it has to derive the output paths from
  *   the import paths. If we have a weird require *outside of this package* to
  *   "../../react-router-dom" it's going to generate types from the common root
- *   of all module paths (Which makes sense becuase what else would it do? It
+ *   of all module paths (Which makes sense because what else would it do? It
  *   needs to write the type files next to the source files so that typescript
  *   can resolve the types for tooling in the same location as the modules).
  *   Because tsc isn't as flexible as rollup, we have no control over this
@@ -47,7 +47,11 @@
  *   deprecate the deep require if we wanted to avoid the duplication here.
  */
 export type {
+  BrowserRouterProps,
   Hash,
+  HashRouterProps,
+  HistoryRouterProps,
+  LinkProps,
   Location,
   Path,
   To,
@@ -56,8 +60,10 @@ export type {
   NavigateOptions,
   NavigateProps,
   Navigator,
+  NavLinkProps,
   OutletProps,
   Params,
+  ParamParseKey,
   PathMatch,
   RouteMatch,
   RouteObject,
@@ -69,6 +75,36 @@ export type {
   Pathname,
   Search,
   RoutesProps,
+  ParamKeyValuePair,
+  URLSearchParamsInit,
+  // New stuff from RR 6.4
+  ActionFunction,
+  ActionFunctionArgs,
+  AwaitProps,
+  unstable_Blocker,
+  unstable_BlockerFunction,
+  DataRouteMatch,
+  DataRouteObject,
+  Fetcher,
+  FetcherWithComponents,
+  FormEncType,
+  FormMethod,
+  FormProps,
+  GetScrollRestorationKeyFunction,
+  IndexRouteObject,
+  JsonFunction,
+  LoaderFunction,
+  LoaderFunctionArgs,
+  Navigation,
+  NonIndexRouteObject,
+  PathPattern,
+  RedirectFunction,
+  RelativeRoutingType,
+  RouterProviderProps,
+  ScrollRestorationProps,
+  ShouldRevalidateFunction,
+  SubmitFunction,
+  SubmitOptions,
 } from "./react-router-dom";
 export {
   BrowserRouter,
@@ -108,6 +144,41 @@ export {
   useResolvedPath,
   useRoutes,
   useSearchParams,
+  // New stuff from 6.4
+  AbortedDeferredError,
+  Await,
+  RouterProvider,
+  ScrollRestoration,
+  createBrowserRouter,
+  createHashRouter,
+  createMemoryRouter,
+  createRoutesFromElements,
+  defer,
+  isRouteErrorResponse,
+  Form,
+  json,
+  redirect,
+  redirectDocument,
+  useActionData,
+  useAsyncError,
+  useAsyncValue,
+  useBeforeUnload,
+  unstable_useBlocker,
+  useFetcher,
+  useFetchers,
+  useFormAction,
+  useLoaderData,
+  useMatches,
+  useNavigation,
+  unstable_usePrompt,
+  useRevalidator,
+  useRouteError,
+  useRouteLoaderData,
+  useSubmit,
+  UNSAFE_DataRouterContext,
+  UNSAFE_DataRouterStateContext,
+  UNSAFE_useScrollRestoration,
+  UNSAFE_useRouteId,
 } from "./react-router-dom";
 
 export type { StaticRouterProps } from "./lib/components";

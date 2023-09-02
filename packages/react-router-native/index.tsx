@@ -1,41 +1,16 @@
 import * as React from "react";
-import {
-  BackHandler,
+import type {
   GestureResponderEvent,
-  Linking,
-  TouchableHighlight,
   TouchableHighlightProps,
 } from "react-native";
-import {
-  MemoryRouter,
+import { BackHandler, Linking, TouchableHighlight } from "react-native";
+import type {
+  To,
   MemoryRouterProps,
-  Navigate,
   NavigateOptions,
-  Outlet,
-  Route,
-  Router,
-  Routes,
-  createRoutesFromChildren,
-  generatePath,
-  matchRoutes,
-  matchPath,
-  createPath,
-  parsePath,
-  resolvePath,
-  renderMatches,
-  useHref,
-  useInRouterContext,
-  useLocation,
-  useMatch,
-  useNavigate,
-  useNavigationType,
-  useOutlet,
-  useParams,
-  useResolvedPath,
-  useRoutes,
-  useOutletContext,
+  RelativeRoutingType,
 } from "react-router";
-import type { To } from "react-router";
+import { MemoryRouter, useLocation, useNavigate } from "react-router";
 
 import URLSearchParams from "@ungap/url-search-params";
 
@@ -44,58 +19,98 @@ import URLSearchParams from "@ungap/url-search-params";
 ////////////////////////////////////////////////////////////////////////////////
 
 // Note: Keep in sync with react-router exports!
-export {
-  MemoryRouter,
-  Navigate,
-  Outlet,
-  Route,
-  Router,
-  Routes,
-  createRoutesFromChildren,
-  generatePath,
-  matchRoutes,
-  matchPath,
-  createPath,
-  parsePath,
-  resolvePath,
-  renderMatches,
-  useHref,
-  useInRouterContext,
-  useLocation,
-  useMatch,
-  useNavigate,
-  useNavigationType,
-  useOutlet,
-  useParams,
-  useResolvedPath,
-  useRoutes,
-  useOutletContext,
-};
-
-export { NavigationType } from "react-router";
 export type {
+  ActionFunction,
+  ActionFunctionArgs,
+  AwaitProps,
+  unstable_Blocker,
+  unstable_BlockerFunction,
+  DataRouteMatch,
+  DataRouteObject,
+  Fetcher,
   Hash,
+  IndexRouteObject,
   IndexRouteProps,
+  JsonFunction,
+  LazyRouteFunction,
   LayoutRouteProps,
+  LoaderFunction,
+  LoaderFunctionArgs,
   Location,
   MemoryRouterProps,
   NavigateFunction,
   NavigateOptions,
   NavigateProps,
+  Navigation,
   Navigator,
+  NonIndexRouteObject,
   OutletProps,
   Params,
+  ParamParseKey,
   Path,
   PathMatch,
+  Pathname,
+  PathPattern,
   PathRouteProps,
+  RedirectFunction,
+  RelativeRoutingType,
   RouteMatch,
   RouteObject,
   RouteProps,
   RouterProps,
+  RouterProviderProps,
   RoutesProps,
-  Pathname,
   Search,
+  ShouldRevalidateFunction,
   To,
+} from "react-router";
+export {
+  AbortedDeferredError,
+  Await,
+  MemoryRouter,
+  Navigate,
+  NavigationType,
+  Outlet,
+  Route,
+  Router,
+  RouterProvider,
+  Routes,
+  createMemoryRouter,
+  createPath,
+  createRoutesFromChildren,
+  createRoutesFromElements,
+  defer,
+  isRouteErrorResponse,
+  generatePath,
+  json,
+  matchPath,
+  matchRoutes,
+  parsePath,
+  redirect,
+  redirectDocument,
+  renderMatches,
+  resolvePath,
+  useActionData,
+  useAsyncError,
+  useAsyncValue,
+  unstable_useBlocker,
+  useHref,
+  useInRouterContext,
+  useLoaderData,
+  useLocation,
+  useMatch,
+  useMatches,
+  useNavigate,
+  useNavigation,
+  useNavigationType,
+  useOutlet,
+  useOutletContext,
+  useParams,
+  useResolvedPath,
+  useRevalidator,
+  useRouteError,
+  useRouteLoaderData,
+  useRoutes,
 } from "react-router";
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -113,9 +128,12 @@ export type {
 
 /** @internal */
 export {
+  UNSAFE_DataRouterContext,
+  UNSAFE_DataRouterStateContext,
   UNSAFE_NavigationContext,
   UNSAFE_LocationContext,
   UNSAFE_RouteContext,
+  UNSAFE_useRouteId,
 } from "react-router";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -134,6 +152,7 @@ export function NativeRouter(props: NativeRouterProps) {
 export interface LinkProps extends TouchableHighlightProps {
   children?: React.ReactNode;
   onPress?: (event: GestureResponderEvent) => void;
+  relative?: RelativeRoutingType;
   replace?: boolean;
   state?: any;
   to: To;
@@ -144,12 +163,13 @@ export interface LinkProps extends TouchableHighlightProps {
  */
 export function Link({
   onPress,
+  relative,
   replace = false,
   state,
   to,
   ...rest
 }: LinkProps) {
-  let internalOnPress = useLinkPressHandler(to, { replace, state });
+  let internalOnPress = useLinkPressHandler(to, { replace, state, relative });
   function handlePress(event: GestureResponderEvent) {
     if (onPress) onPress(event);
     if (!event.defaultPrevented) {
@@ -177,14 +197,16 @@ export function useLinkPressHandler(
   {
     replace,
     state,
+    relative,
   }: {
     replace?: boolean;
     state?: any;
+    relative?: RelativeRoutingType;
   } = {}
 ): (event: GestureResponderEvent) => void {
   let navigate = useNavigate();
   return function handlePress() {
-    navigate(to, { replace, state });
+    navigate(to, { replace, state, relative });
   };
 }
 
@@ -268,16 +290,19 @@ export function useSearchParams(
   defaultInit?: URLSearchParamsInit
 ): [URLSearchParams, SetURLSearchParams] {
   let defaultSearchParamsRef = React.useRef(createSearchParams(defaultInit));
+  let hasSetSearchParamsRef = React.useRef(false);
 
   let location = useLocation();
   let searchParams = React.useMemo(() => {
     let searchParams = createSearchParams(location.search);
 
-    for (let key of defaultSearchParamsRef.current.keys()) {
-      if (!searchParams.has(key)) {
-        defaultSearchParamsRef.current.getAll(key).forEach((value) => {
-          searchParams.append(key, value);
-        });
+    if (!hasSetSearchParamsRef.current) {
+      for (let key of defaultSearchParamsRef.current.keys()) {
+        if (!searchParams.has(key)) {
+          defaultSearchParamsRef.current.getAll(key).forEach((value) => {
+            searchParams.append(key, value);
+          });
+        }
       }
     }
 
@@ -285,19 +310,25 @@ export function useSearchParams(
   }, [location.search]);
 
   let navigate = useNavigate();
-  let setSearchParams: SetURLSearchParams = React.useCallback(
+  let setSearchParams = React.useCallback<SetURLSearchParams>(
     (nextInit, navigateOpts) => {
-      navigate("?" + createSearchParams(nextInit), navigateOpts);
+      const newSearchParams = createSearchParams(
+        typeof nextInit === "function" ? nextInit(searchParams) : nextInit
+      );
+      hasSetSearchParamsRef.current = true;
+      navigate("?" + newSearchParams, navigateOpts);
     },
-    [navigate]
+    [navigate, searchParams]
   );
 
   return [searchParams, setSearchParams];
 }
 
-type SetURLSearchParams = (
-  nextInit?: URLSearchParamsInit | undefined,
-  navigateOpts?: NavigateOptions | undefined
+export type SetURLSearchParams = (
+  nextInit?:
+    | URLSearchParamsInit
+    | ((prev: URLSearchParams) => URLSearchParamsInit),
+  navigateOpts?: NavigateOptions
 ) => void;
 
 export type ParamKeyValuePair = [string, string];

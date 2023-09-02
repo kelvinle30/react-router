@@ -28,13 +28,7 @@ function getTaggedVersion() {
  * @param {string|number} version
  */
 async function ensureBuildVersion(packageName, version) {
-  let file = path.join(
-    rootDir,
-    "build",
-    "node_modules",
-    packageName,
-    "package.json"
-  );
+  let file = path.join(rootDir, "packages", packageName, "package.json");
   let json = await jsonfile.readFile(file);
   invariant(
     json.version === version,
@@ -47,11 +41,13 @@ async function ensureBuildVersion(packageName, version) {
  * @param {string} tag
  */
 function publishBuild(packageName, tag) {
-  let buildDir = path.join(rootDir, "build", "node_modules", packageName);
+  let buildDir = path.join(rootDir, "packages", packageName);
   console.log();
-  console.log(`  npm publish ${buildDir} --tag ${tag}`);
+  console.log(`  npm publish ${buildDir} --tag ${tag} --access public`);
   console.log();
-  execSync(`npm publish ${buildDir} --tag ${tag}`, { stdio: "inherit" });
+  execSync(`npm publish ${buildDir} --tag ${tag} --access public`, {
+    stdio: "inherit",
+  });
 }
 
 /**
@@ -73,17 +69,28 @@ async function run() {
     );
 
     // 2. Determine the appropriate npm tag to use
-    let tag = semver.prerelease(version) == null ? "latest" : "next";
+    let tag = version.includes("experimental")
+      ? "experimental"
+      : semver.prerelease(version) == null
+      ? "latest"
+      : "pre";
 
     console.log();
     console.log(`  Publishing version ${version} to npm with tag "${tag}"`);
 
     // 3. Ensure build versions match the release version
+    if (version.includes("experimental")) {
+      // FIXME: @remix-run/router is versioned differently and is only handled
+      // for experimental releases here
+      await ensureBuildVersion("router", version);
+    }
     await ensureBuildVersion("react-router", version);
     await ensureBuildVersion("react-router-dom", version);
+    await ensureBuildVersion("react-router-dom-v5-compat", version);
     await ensureBuildVersion("react-router-native", version);
 
     // 4. Publish to npm
+    publishBuild("router", tag);
     publishBuild("react-router", tag);
     publishBuild("react-router-dom", tag);
     publishBuild("react-router-dom-v5-compat", tag);

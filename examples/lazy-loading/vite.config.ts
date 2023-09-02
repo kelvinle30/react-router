@@ -5,6 +5,9 @@ import rollupReplace from "@rollup/plugin-replace";
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  server: {
+    port: 3000,
+  },
   plugins: [
     rollupReplace({
       preventAssignment: true,
@@ -18,9 +21,13 @@ export default defineConfig({
   resolve: process.env.USE_SOURCE
     ? {
         alias: {
+          "@remix-run/router": path.resolve(
+            __dirname,
+            "../../packages/router/index.ts"
+          ),
           "react-router": path.resolve(
             __dirname,
-            "../../packages/react-router/index.tsx"
+            "../../packages/react-router/index.ts"
           ),
           "react-router-dom": path.resolve(
             __dirname,

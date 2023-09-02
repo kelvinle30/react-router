@@ -1,4 +1,3 @@
-import * as React from "react";
 import {
   Routes,
   Route,
@@ -17,7 +16,7 @@ export default function App() {
       <p>
         This example demonstrates how to create a custom{" "}
         <code>&lt;Link&gt;</code> component that knows whether or not it is
-        "active" using the low-level <code>useResolvedPath()</code> and
+        "active" using the low-level <code>useResolvedPath()</code> and{" "}
         <code>useMatch()</code> hooks.
       </p>
 

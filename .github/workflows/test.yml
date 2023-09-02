@@ -1,37 +1,63 @@
-name: test
+name: 🧪 Test
+
 on:
   push:
     branches:
-      - "**"
+      - main
+      - dev
     tags-ignore:
       - v*
     paths-ignore:
       - "docs/**"
       - "**/README.md"
   pull_request:
-    types: [opened, synchronize]
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
+    name: "🧪 Test: (Node: ${{ matrix.node }})"
+    strategy:
+      fail-fast: false
+      matrix:
+        node:
+          - 16
+          - 18
+
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v3
 
-      - name: Set up Node
-        uses: actions/setup-node@v2
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v3
         with:
-          node-version: 14
-          check-latest: true
           cache: yarn
+          check-latest: true
+          node-version: ${{ matrix.node }}
 
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
+      - name: Disable GitHub Actions Annotations
+        run: |
+          echo "::remove-matcher owner=tsc::"
+          echo "::remove-matcher owner=eslint-compact::"
+          echo "::remove-matcher owner=eslint-stylish::"
 
-      - name: Build
+      - name: 📥 Install deps
+        run: yarn --frozen-lockfile
+
+      - name: 🏗 Build
         run: yarn build
 
-      - name: Test
+      - name: 🔬 Lint
+        run: yarn lint
+
+      - name: 🧪 Run tests
         run: yarn test
 
       - name: Check bundle size

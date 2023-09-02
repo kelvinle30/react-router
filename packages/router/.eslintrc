@@ -1,0 +1,10 @@
+{
+  "env": {
+    "browser": true,
+    "commonjs": true
+  },
+  "rules": {
+    "strict": 0,
+    "no-restricted-syntax": ["error", "LogicalExpression[operator='??']"]
+  }
+}
